@@ -78,7 +78,8 @@ async def search_google_ai(query: str) -> str:
     try:
         # Connect to the Playwright MCP server
         server_params = StdioServerParameters(
-            command="/Users/davidson/workspace/agent-task-mcp/agent-playwright-mcp/run_playwright_proxy.sh"
+            command="npx",
+            args=["@playwright/mcp@latest", "--isolated"]
         )
         
         async with stdio_client(server_params) as (read, write):
