@@ -61,13 +61,73 @@ async def search_wikipedia(query: str, limit: int = 5) -> str:
         return output.strip()
 
 @mcp.tool()
+async def debug() -> str:
+    """
+    Debug tool that navigates to the Google AI search page and returns a snapshot.
+
+    Returns:
+        A snapshot of the Google AI search page
+    """
+    from mcp import ClientSession, StdioServerParameters
+    from mcp.client.stdio import stdio_client
+
+    try:
+        # Connect to the Playwright MCP server
+        server_params = StdioServerParameters(
+            command="npx",
+            args=["@playwright/mcp@latest"]
+        )
+
+        async with stdio_client(server_params) as (read, write):
+            async with ClientSession(read, write) as session:
+                # Initialize the session
+                await session.initialize()
+
+                # Navigate to Google AI search mode
+                await session.call_tool(
+                    "browser_navigate",
+                    arguments={"url": "https://www.google.com/search?udm=50"}
+                )
+
+                # Wait for page to load
+                await session.call_tool(
+                    "browser_wait_for",
+                    arguments={"time": 3}
+                )
+
+                # Take a snapshot of the page
+                snapshot_result = await session.call_tool(
+                    "browser_snapshot",
+                    arguments={}
+                )
+
+                # Extract the snapshot text
+                snapshot_text = ""
+                if hasattr(snapshot_result, 'content') and snapshot_result.content:
+                    for content_item in snapshot_result.content:
+                        if hasattr(content_item, 'text'):
+                            snapshot_text = content_item.text
+                            break
+
+                # Keep the browser open for debugging
+                await session.call_tool(
+                    "browser_wait_for",
+                    arguments={"time": 30}  # Wait 30 seconds before closing
+                )
+
+                return f"Debug: Google AI Search Page Navigation Complete\n\nPage Snapshot:\n{snapshot_text}"
+
+    except Exception as e:
+        return f"Debug error: {str(e)}"
+
+@mcp.tool()
 async def search_google_ai(query: str) -> str:
     """
     Search Google using AI Mode via Playwright MCP and return the AI-generated response.
-    
+
     Args:
         query: The search query to ask Google AI
-    
+
     Returns:
         The AI response from Google search
     """
@@ -79,7 +139,7 @@ async def search_google_ai(query: str) -> str:
         # Connect to the Playwright MCP server
         server_params = StdioServerParameters(
             command="npx",
-            args=["@playwright/mcp@latest", "--isolated"]
+            args=["@playwright/mcp@latest"]
         )
         
         async with stdio_client(server_params) as (read, write):
