@@ -11,56 +11,6 @@ from fastmcp import FastMCP
 mcp = FastMCP("google-ai-search")
 
 @mcp.tool()
-async def search_wikipedia(query: str, limit: int = 5) -> str:
-    """
-    Search Wikipedia for articles matching the query.
-    
-    Args:
-        query: Search term to look for
-        limit: Maximum number of results to return (default: 5)
-    
-    Returns:
-        A formatted string with search results
-    """
-    # Wikipedia API endpoint
-    url = "https://en.wikipedia.org/w/api.php"
-    
-    params = {
-        "action": "query",
-        "format": "json",
-        "list": "search",
-        "srsearch": query,
-        "srlimit": limit
-    }
-    
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, params=params)
-        data = response.json()
-        
-        if "query" not in data or "search" not in data["query"]:
-            return f"No results found for '{query}'"
-        
-        results = data["query"]["search"]
-        
-        if not results:
-            return f"No results found for '{query}'"
-        
-        # Format the results
-        output = f"Wikipedia search results for '{query}':\n\n"
-        
-        for i, result in enumerate(results, 1):
-            title = result.get("title", "Unknown")
-            snippet = result.get("snippet", "No description available")
-            # Remove HTML tags from snippet
-            snippet = snippet.replace("<span class='searchmatch'>", "").replace("</span>", "")
-            
-            output += f"{i}. **{title}**\n"
-            output += f"   {snippet}...\n"
-            output += f"   URL: https://en.wikipedia.org/wiki/{title.replace(' ', '_')}\n\n"
-        
-        return output.strip()
-
-@mcp.tool()
 async def debug() -> str:
     """
     Debug tool that navigates to the Google AI search page and returns a snapshot.
